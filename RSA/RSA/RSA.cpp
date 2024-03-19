@@ -39,6 +39,18 @@ int get_inverse(int a, int modular) {
         throw std::runtime_error("No inverse exists");
     }
 
+    // increament factor that holds inverse value
+    int inverse_val = 1;
+
+    while ((a * inverse_val) % modular != 1 and inverse_val < modular) {
+        inverse_val++;
+    }
+
+    if (inverse_val == modular) {
+        throw std::runtime_error("No inverse exists");
+    }
+
+    return inverse_val;
 
 
 }
@@ -84,6 +96,14 @@ keys generate_keys(int p, int q) {
     return result;
 }
 
+int rsa_encryption(int n, int e) {
+    return 0;
+}
+
+int rsa_decryption(int d) {
+    return 0;
+}
+
 
 int main()
 {
@@ -110,6 +130,8 @@ int main()
 
         cout << "Random prime 1: " << rand1 << endl;
         cout << "Random prime 2: " << rand2 << endl;
+
+        keys curr_keys = generate_keys(rand1, rand2);
 
     }
 

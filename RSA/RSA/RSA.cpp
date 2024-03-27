@@ -76,19 +76,13 @@ int get_inverse(int a, int modular) {
         throw std::runtime_error("No inverse exists");
     }
 
-    // increament factor that holds inverse value
-    int inverse_val = 1;
+    eea a_eea = compute_eea(modular, a);
 
-    while ((a * inverse_val) % modular != 1 and inverse_val < modular) {
-        inverse_val++;
-    }
-
-    if (inverse_val == modular) {
+    if (a_eea.r != 1) {
         throw std::runtime_error("No inverse exists");
     }
 
-    return inverse_val;
-
+    return a_eea.t % modular;
 
 }
 

@@ -1,9 +1,29 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "C:\Program Files\MATLAB\R2024a\extern\include"
 
 using namespace std;
+using namespace matlab::engine;
 
+
+extern void has_inverse(float key[][3]){
+    std::unique_ptr<MATLABEngine> matlabPtr = startMATLAB();
+
+    std::vector<float> keyVector;
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            keyVector.push_back(key[i][j]);
+        }
+    }
+
+    // Initialize 3x3 matlab data arra
+    matlab::data::ArrayFactory factory;
+    Array key_arr = factory.createArray<float>({3,3},
+    keyVector.cbegin(), keyVector.cend());
+
+
+}
 
 void hill_cipher(string message, float key[][3]){
 }

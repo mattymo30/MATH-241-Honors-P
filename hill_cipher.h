@@ -1,4 +1,5 @@
 #ifndef HILL_CIPHER
 #define HILL_CIPHER
-extern void has_inverse(float key[][3]);
+#include <vector>
+extern bool has_inverse(std::vector<int> key);
 #endif

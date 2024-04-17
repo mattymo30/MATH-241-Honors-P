@@ -54,6 +54,15 @@
         "xmemory": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "algorithm": "cpp",
+        "codecvt": "cpp",
+        "complex": "cpp",
+        "functional": "cpp",
+        "list": "cpp",
+        "optional": "cpp",
+        "sstream": "cpp",
+        "unordered_map": "cpp",
+        "xhash": "cpp"
     }
 }

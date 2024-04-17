@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
-#include "hill_cipher.h"
-#include "C:\Program Files\MATLAB\R2024a\extern\include"
+#include "hill_c.h"
+#include "C:\Program Files\MATLAB\R2024a\extern\include\matrix.h"
+#include "C:\Program Files\MATLAB\R2024a\extern\include\MatlabEngine.hpp"
 
 using namespace std;
 using namespace matlab::engine;

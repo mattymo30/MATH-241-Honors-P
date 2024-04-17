@@ -129,26 +129,39 @@ keys generate_keys(int p, int q) {
 
 int rsa_encryption(int n, int e, int x) {
 
-    int encrypt = (int)pow(x, e) % n;
-    if (encrypt < 0) {
-        while (encrypt < 0) {
-            encrypt += n;
+    long long result = 1;
+    long long base = x;
+    long long exponent = e;
+
+    // Perform modular exponentiation
+    while (exponent > 0) {
+        if (exponent % 2 == 1) {
+            result = (result * base) % n;
         }
+        base = (base * base) % n;
+        exponent /= 2;           
     }
 
-    return encrypt;
+    return static_cast<int>(result);
 }
 
 int rsa_decryption(int d, int n, int y) {
 
-    int decrypt = (int)pow(y, d) % n;
-    if (decrypt < 0) {
-        while (decrypt < 0) {
-            decrypt += n;
+
+    long long result = 1; 
+    long long base = y;  
+    long long exponent = d;
+
+    // Perform modular exponentiation
+    while (exponent > 0) {
+        if (exponent % 2 == 1) {
+            result = (result * base) % n; // Update result modulo n at each step
         }
+        base = (base * base) % n; // Square base and update modulo n
+        exponent /= 2;            // Divide exponent by 2 for each iteration
     }
 
-    return decrypt;
+    return static_cast<int>(result);
 }
 
 

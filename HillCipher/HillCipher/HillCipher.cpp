@@ -2,38 +2,10 @@
 #include <string>
 #include <armadillo>
 #include <cstring>
-#include "hill_c.h"
 
 using namespace std;
 using namespace arma;
 
-/**
- * Convert the key matrix into a vector for future use
- *
- * @param key the key matrix to convert
- * @return a vector version of the key matrix
-*/
-vector<float> key_to_vector(float key[][3]) {
-    vector<float> keyVector;
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            keyVector.push_back(key[i][j]);
-        }
-    }
-
-    return keyVector;
-}
-
-/**
- * Using matlab, check if the key has an inverse
- *
- * @param key the vector version of the key matrix
- * @return True if the key has a matrix or False otherwise
-*/
-extern bool has_inverse(std::vector<int> key) {
-
-    return true;
-}
 
 
 /**
@@ -84,15 +56,24 @@ int main() {
             message.push_back('A');
         }
     }
+    message_len = message.length();
+
+    char* message_ints = new char[message_len];
+    for (int i = 0; i < message_len; ++i) {
+        message_ints[i] = message[i];
+    }
+
+    cout << "ASCII values of characters in the message:" << endl;
+    for (int i = 0; i < message_len; ++i) {
+        cout << static_cast<int>(message_ints[i]) << " ";
+    }
+    cout << endl;
 
    
     mat key(3, 3);
     key.zeros();
-
-    /**
-    float key[3][3];
-    vector<vector<float>> key_vector;
     char* key_arr = new char[9 + 1];
+    int key_ints[9 + 1];
     bool inverse = false;
     do {
         string init_key = "";
@@ -101,21 +82,51 @@ int main() {
 
         int key_len = init_key.length();
         if (key_len != 9) {
-            cout << "Key does not have a length of 9!\n";
+            cout << "Key does not have a length of 9!" << endl;
             continue;
         }
         // transform to uppercase for simplicity
         transform(init_key.begin(), init_key.end(), init_key.begin(), toupper);
 
-        strcpy(key_arr, init_key.c_str());
+        for (int i = 0; i < 9; ++i) {
+            key_arr[i] = init_key[i];
+        }
+        key_arr[9] = '\0';
+
+        
+
+        // Convert each character to its ASCII value modulo 26
+        for (int i = 0; i < 9; ++i) {
+            // Convert character to ASCII value
+            int ascii_value = key_arr[i];
+            // Apply modulo 26
+            int mod_value = (ascii_value - 'A') % 26;
+            key_ints[i] = mod_value;
+        }
+
+        // Convert key_ints to the key matrix
+        int index = 0;
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                key.at(i, j) = key_ints[index++];
+            }
+        }
 
 
+        // check for inverse
+        mat inv_key;
+        bool has_inverse = inv(inv_key, key);
+        if (has_inverse) {
+            inverse = true;
+        }
+        else {
+            cout << "This key does not have an inverse!" << endl;
+        }
 
     } while (!inverse);
-      
-    delete[] key_arr;
-    */
 
+
+    delete[] key_arr;
 
     return 0;
 

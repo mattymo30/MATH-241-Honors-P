@@ -6,6 +6,116 @@
 using namespace std;
 using namespace arma;
 
+struct eea {
+    int r;
+    int s;
+    int t;
+};
+
+eea compute_eea(int r0, int r1) {
+    int s0 = 1;
+    int t0 = 0;
+    int s1 = 0;
+    int t1 = 1;
+
+    while (r1 > 0) {
+        int q = r0 / r1;
+        int r2 = r0 - q * r1;
+        int s2 = s0 - q * s1;
+        int t2 = t0 - q * t1;
+
+        r0 = r1;
+        r1 = r2;
+        s0 = s1;
+        s1 = s2;
+        t0 = t1;
+        t1 = t2;
+    }
+
+    eea result;
+    result.r = r0;
+    result.s = s0;
+    result.t = t0;
+
+    return result;
+
+}
+
+
+int get_inverse(int a, int modular) {
+    eea a_eea = compute_eea(modular, a);
+
+    if (a_eea.r != 1) {
+        throw std::runtime_error("No inverse exists");
+    }
+
+    return a_eea.t % modular;
+
+}
+
+
+
+Mat<int> invert_ley_matrix(double key_det, mat key) {
+    // first need to invert determinant of key matrix
+    int int_det = int(key_det);
+    int_det %= 26;
+    int inverse_det = get_inverse(int_det, 26);
+
+    mat trans_key = trans(key);
+
+    // finding "core" values of matrix by finding 2x2 det
+    // of all cells in the matrix
+    Mat<int> inverse_key(3, 3);
+
+    for (uword i = 0; i < 3; ++i) {
+        for (uword j = 0; j < 3; ++j) {
+            // Extract the corresponding 2x2 submatrix
+            mat submatrix = trans_key.submat(0, 0, 2, 2);
+
+            // Remove the i-th row
+            submatrix.shed_row(i);
+
+            // Remove the j-th column
+            submatrix.shed_col(j);
+
+            // Calculate the determinant of the submatrix
+            double determinant = det(submatrix);
+
+            if ((i + j) % 2 == 1) {
+                determinant = -determinant;
+            }
+
+
+            int int_d = int(determinant);
+
+            int_d %= 26;
+
+            if (int_d < 0) {
+                int_d += 26;
+            }
+
+
+            inverse_key.at(i, j) = int_d;
+        }
+    }
+
+    for (uword i = 0; i < 3; ++i) {
+        for (uword j = 0; j < 3; ++j) {
+            int val = inverse_key(i, j);
+            val = (val * inverse_det) % 26;
+
+            if (val < 0) {
+                val += 26;
+            }
+
+            inverse_key(i, j) = val;
+        }
+    }
+
+    return inverse_key;
+
+
+}
 
 
 /**
@@ -23,7 +133,6 @@ vector<Mat<int>> encrypt_hill_cipher(vector<Mat<int>> message, Mat<int> key) {
 
     // Iterate through each matrix in the message vector
     for (const auto& matrix : message) {
-        // Perform encryption for each matrix (for demonstration, I'll just multiply the matrix by the key)
         Mat<int> encrypted_matrix = key * matrix;
 
         for (uword i = 0; i < encrypted_matrix.n_rows; ++i) {
@@ -40,6 +149,45 @@ vector<Mat<int>> encrypt_hill_cipher(vector<Mat<int>> message, Mat<int> key) {
     return encrypted;
 }
 
+
+void print_encrypted(vector<Mat<int>> encrypted) {
+
+    cout << "Encrypted Message: " << endl;
+
+    for (const auto& matrix : encrypted) {
+
+        for (uword i = 0; i < matrix.n_rows; ++i) {
+            for (uword j = 0; j < matrix.n_cols; ++j) {
+                int ascii = matrix(i, j);
+                char character = static_cast<char>(ascii + 'A');
+                cout << character;
+            }
+        }
+
+    }
+
+    cout << endl;
+}
+
+void print_decrypted(vector<Mat<int>> decrypted) {
+
+    cout << "Decrypted Message: " << endl;
+
+    for (const auto& matrix : decrypted) {
+
+        for (uword i = 0; i < matrix.n_rows; ++i) {
+            for (uword j = 0; j < matrix.n_cols; ++j) {
+                int ascii = matrix(i, j);
+                char character = static_cast<char>(ascii + 'A');
+                cout << character;
+            }
+        }
+
+    }
+
+    cout << endl;
+}
+
 /**
  * Using the inverse key matrix decrypt the encrypted messgae back into its
  * original state
@@ -54,9 +202,9 @@ vector<Mat<int>> decrypt_hill_cipher(vector<Mat<int>> encrypted, Mat<int> invers
 
     vector<Mat<int>> decrypted;
 
+
     // Iterate through each matrix in the message vector
     for (const auto& matrix : encrypted) {
-        // Perform encryption for each matrix (for demonstration, I'll just multiply the matrix by the key)
         Mat<int> decrypted_matrix = inverse_key * matrix;
 
         for (uword i = 0; i < decrypted_matrix.n_rows; ++i) {
@@ -121,7 +269,7 @@ int main() {
     }
 
     for (size_t i = 0; i < message_matrices.size(); ++i) {
-        cout << "Matrix " << i + 1 << ":" << endl;
+        cout << "Matrix of Message Portion " << i + 1 << ":" << endl;
         cout << message_matrices[i] << endl;
     }
 
@@ -174,18 +322,15 @@ int main() {
 
 
         // check for inverse
-        mat inv_key;
-        bool has_inverse = inv(inv_key, key);
-        if (has_inverse) {
-            cout << "Key Inverse Matrix " << endl;
-            cout << inv_key << endl;
-            inverse = true;
-            key_int = conv_to<Mat<int>>::from(key);
-            key_inv_int = conv_to<Mat<int>>::from(inv_key);
-        }
-        else {
+        double detA = det(key);
+        if (detA == 0) {
             cout << "This key does not have an inverse!" << endl;
+            continue;
         }
+
+        key_int = conv_to<Mat<int>>::from(key);
+        key_inv_int = invert_ley_matrix(detA, key);
+        inverse = true;
 
     } while (!inverse);
 
@@ -197,26 +342,12 @@ int main() {
 
     vector<Mat<int>> encrypted = encrypt_hill_cipher(message_matrices, key_int);
 
-    Mat<int> concat_encrypted;
-    for (const auto& matrix : encrypted) {
-        concat_encrypted = join_horiz(concat_encrypted, matrix);
-    }
-    
-    cout << "Encrypted Matrix " << endl;
-    cout << concat_encrypted << endl;
+    print_encrypted(encrypted);
 
     vector<Mat<int>> decrypted = decrypt_hill_cipher(encrypted, key_inv_int);
 
-    Mat<int> concat_decrypted;
-    for (const auto& matrix : decrypted) {
-        concat_decrypted = join_horiz(concat_decrypted, matrix);
-    }
 
-    cout << "Decrypted Matrix " << endl;
-    cout << concat_decrypted << endl;
-
-
-
+    print_decrypted(decrypted);
 
     delete[] key_arr;
 

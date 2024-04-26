@@ -84,7 +84,6 @@ int get_inverse(int a, int modular) {
 
 
 ec_point point_addition(ec_point P, ec_point Q, ec_curve curve) {
-    ec_point R;
 
     int x1 = P.x;
     int y1 = P.y;
@@ -235,6 +234,7 @@ ec_point decryption(ec_curve curve, ec_point C1, ec_point C2, int d) {
     mult_c1 = point_inverse(mult_c1, curve);
 
     M = point_addition(C2, mult_c1, curve);
+    return M;
 }
 
 

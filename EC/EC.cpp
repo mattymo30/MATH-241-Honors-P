@@ -35,6 +35,11 @@ struct keys {
     private_key pr_k;
 };
 
+struct encrypted {
+    ec_point C1;
+    ec_point C2;
+};
+
 eea compute_eea(int r0, int r1) {
     int s0 = 1;
     int t0 = 0;
@@ -200,6 +205,36 @@ keys generate_keys(ec_curve curve, ec_point P) {
     keys.pr_k = pr_k;
 
     return keys;
+}
+
+
+encrypted encryption(ec_curve curve, ec_point P, ec_point Q, ec_point M) {
+    ec_point C1;
+    ec_point C2;
+
+    int k;
+    k = rand() % (curve.p - 1) + 2;
+
+    C1 = int_mult_point(P, k, curve);
+
+    C2 = int_mult_point(Q, k, curve);
+
+    C2 = point_addition(C2, M, curve);
+
+    encrypted points;
+    points.C1 = C1;
+    points.C2 = C2;
+
+    return points;
+}
+
+ec_point decryption(ec_curve curve, ec_point C1, ec_point C2, int d) {
+    ec_point M;
+
+    ec_point mult_c1 = int_mult_point(C1, d, curve);
+    mult_c1 = point_inverse(mult_c1, curve);
+
+    M = point_addition(C2, mult_c1, curve);
 }
 
 

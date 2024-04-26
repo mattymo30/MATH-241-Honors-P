@@ -1,6 +1,7 @@
 // EC.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include <iostream>
+#include <stdlib.h>
 #include <cmath>
 
 struct ec_curve {
@@ -8,7 +9,6 @@ struct ec_curve {
     int b;
     int p;
 };
-
 
 struct ec_point {
     int x;
@@ -19,6 +19,20 @@ struct eea {
     int r;
     int s;
     int t;
+};
+
+struct public_key {
+    ec_point Q;
+};
+
+struct private_key {
+    int d;
+};
+
+
+struct keys {
+    public_key pub_k;
+    private_key pr_k;
 };
 
 eea compute_eea(int r0, int r1) {
@@ -73,6 +87,15 @@ ec_point point_addition(ec_point P, ec_point Q, ec_curve curve) {
     int y2 = Q.y;
 
     int den = x2 - x1;
+
+    if (den == 0) {
+        ec_point new_p;
+        new_p.x = -1;
+        new_p.y = -1;
+        return new_p;
+    }
+
+
     int inv_den = get_inverse(den, curve.p);
 
     int s = ((y2 - y1) * inv_den) % curve.p;
@@ -94,6 +117,13 @@ ec_point point_doubling(ec_point P, ec_curve curve) {
     int s;
 
     int den = 2 * P.y;
+
+    if (den == 0) {
+        ec_point new_p;
+        new_p.x = -1;
+        new_p.y = -1;
+        return new_p;
+    }
 
     int inv_den = get_inverse(den, curve.p);
 
@@ -134,10 +164,53 @@ ec_point int_mult_point(ec_point P, int mult, ec_curve curve) {
 
 }
 
+ec_point point_inverse(ec_point P, ec_curve curve) {
+    P.y = -P.y;
+
+    P.y %= curve.p;
+
+    if (P.y < 0) {
+        while (P.y < 0) {
+            P.y += curve.p;
+        }
+    }
+
+
+    return P;
+}
+
+keys generate_keys(ec_curve curve, ec_point P) {
+    srand(time(NULL));
+
+    ec_point Q;
+
+    int d;
+    d = rand() % (curve.p - 1) + 2;
+
+    Q = int_mult_point(P, d, curve);
+
+    public_key pub_k;
+    pub_k.Q = Q;
+    private_key pr_k;
+    pr_k.d = d;
+
+    keys keys;
+
+    keys.pub_k = pub_k;
+    keys.pr_k = pr_k;
+
+    return keys;
+}
+
 
 
 int main()
 {
+    ec_curve curve;
+    curve.a = 0;
+    curve.b = 7;
+    curve.p = 17;
+
     std::cout << "Hello World!\n";
 }
 

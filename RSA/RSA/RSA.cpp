@@ -28,6 +28,14 @@ struct eea {
 list<int> primes{ 11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,
                   79,83,89,97 };
 
+/**
+ * @brief Computes the Extended Euclidean Algorithm (EEA) to find the greatest common divisor
+ *        and Bézout coefficients of two integers.
+ *
+ * @param r0 The first integer.
+ * @param r1 The second integer.
+ * @return A struct containing the results of the EEA: r (gcd), s, and t (Bézout coefficients).
+ */
 eea compute_eea(int r0, int r1) {
     int s0 = 1;
     int t0 = 0;
@@ -58,6 +66,12 @@ eea compute_eea(int r0, int r1) {
 }
 
 
+/**
+ * @brief Retrieves a prime number from a predefined list based on the provided index.
+ *
+ * @param index The index of the prime number to retrieve.
+ * @return The prime number at the specified index.
+ */
 int get_random_prime(int index) {
 
     auto it = primes.begin();
@@ -66,11 +80,26 @@ int get_random_prime(int index) {
     return *it;
 }
 
+/**
+ * @brief Checks if a number has a multiplicative inverse modulo another number.
+ *
+ * @param a The number.
+ * @param modular The modulo value.
+ * @return True if a has an inverse modulo modular, false otherwise.
+ */
 bool has_inverse(int a, int modular) {
     return std::gcd(a, modular) == 1;
 }
 
-
+/**
+ * @brief Calculates the multiplicative inverse of a modulo another number using the 
+ * Extended Euclidean Algorithm.
+ *
+ * @param a The number.
+ * @param modular The modulo value.
+ * @return The multiplicative inverse of a modulo modular.
+ * @throws std::runtime_error if no inverse exists.
+ */
 int get_inverse(int a, int modular) {
     if (!has_inverse(a, modular)) {
         throw std::runtime_error("No inverse exists");
@@ -86,9 +115,13 @@ int get_inverse(int a, int modular) {
 
 }
 
-
-
-
+/**
+ * @brief Generates public and private keys for RSA encryption and decryption.
+ *
+ * @param p The first prime number.
+ * @param q The second prime number.
+ * @return A struct containing the generated public and private keys.
+ */
 keys generate_keys(int p, int q) {
     tuple <int, int> public_key;
     int private_key;
@@ -127,6 +160,14 @@ keys generate_keys(int p, int q) {
     return result;
 }
 
+/**
+ * @brief Encrypts a plaintext using RSA encryption.
+ *
+ * @param n The modulus.
+ * @param e The public exponent.
+ * @param x The plaintext to encrypt.
+ * @return The ciphertext.
+ */
 int rsa_encryption(int n, int e, int x) {
 
     long long result = 1;
@@ -145,6 +186,14 @@ int rsa_encryption(int n, int e, int x) {
     return static_cast<int>(result);
 }
 
+/**
+ * @brief Decrypts a ciphertext using RSA decryption.
+ *
+ * @param d The private exponent.
+ * @param n The modulus.
+ * @param y The ciphertext to decrypt.
+ * @return The decrypted plaintext.
+ */
 int rsa_decryption(int d, int n, int y) {
 
 
@@ -168,54 +217,12 @@ int rsa_decryption(int d, int n, int y) {
 int main()
 {
     keys user_keys;
-    /**
-    cout << "Enter the following:\n"
-        "0: Use two random two digit primes\n"
-        "1: Use your own two prime numbers\n";
-    int user_choice;
-    cin >> user_choice;
-
-    keys user_keys;
-
-    if (user_choice == 0) {
-        srand(time(0));
-
-        int prime_count = primes.size();
-        int rand_index1 = rand() % prime_count;
-        int rand1 = get_random_prime(rand_index1);
-
-        int rand_index2;
-
-        do {
-           rand_index2 = rand() % prime_count;
-        } while (rand_index2 == rand_index1);
-
-        int rand2 = get_random_prime(rand_index2);
-
-        cout << "Random prime 1: " << rand1 << endl;
-        cout << "Random prime 2: " << rand2 << endl;
-
-        user_keys = generate_keys(rand1, rand2);
-
-    }
-    */
 
     int p = 3;
     int q = 11;
     int e = 3;
     int d = 7;
     int n = p * q;
-    /*
-    user_keys = generate_keys(p, q);
-
-
-
-    // TODO get user inputted values and check if usable
-
-    cout << "Public Key: (" << get<0>(user_keys.public_key)
-        << ", " << get<1>(user_keys.public_key) << ")" << endl;
-    cout << "Private Key: " << user_keys.private_key << endl;
-    */
 
 
     cout << "Enter your message to encrypt:\n";

@@ -248,7 +248,6 @@ ec_point point_inverse(ec_point P, ec_curve curve) {
         }
     }
 
-
     return P;
 }
 

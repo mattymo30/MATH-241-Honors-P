@@ -62,10 +62,18 @@ int get_inverse(int a, int modular) {
     eea a_eea = compute_eea(modular, a);
 
     if (a_eea.r != 1) {
-        throw std::runtime_error("No inverse exists");
+        return -1;
     }
 
-    return a_eea.t % modular;
+
+    int inv = a_eea.t % modular;
+    if (inv < 0) {
+        while (inv < 0) {
+            inv += modular;
+        }
+    }
+
+    return inv;
 
 }
 
@@ -81,6 +89,11 @@ Mat<int> invert_ley_matrix(double key_det, mat key) {
     int int_det = int(key_det);
     int_det %= 26;
     int inverse_det = get_inverse(int_det, 26);
+
+    if (inverse_det == -1) {
+        Mat<int> key;
+        return key;
+    }
 
     mat trans_key = trans(key);
 
@@ -355,7 +368,15 @@ int main() {
         }
 
         key_int = conv_to<Mat<int>>::from(key);
+
+        cout << "Key Matrix " << endl;
+        cout << key_int << endl;
+
         key_inv_int = invert_ley_matrix(detA, key);
+        if (key_inv_int.is_empty()) {
+            cout << "This key does not have an inverse!" << endl;
+            continue;
+        }
         inverse = true;
 
     } while (!inverse);

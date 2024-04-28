@@ -403,11 +403,25 @@ int main()
     curve.b = 7;
     curve.p = 17;
 
+    cout << "Elliptic Curve: " << endl;
+    cout << "y^2 = x^3 + " << curve.a << "x + " << curve.b << " (mod " << curve.p << ")" << endl;
+
     ec_point point;
     point.x = 8;
     point.y = 3;
 
+    cout << "Point of Reference: " << endl;
+    cout << "(" << point.x << ", " << point.y << ")" << endl;
+
+
     keys k = generate_keys(curve, point);
+    cout << "Public Key: " << endl;
+    cout << "Q = (" << k.pub_k.Q.x << ", " << k.pub_k.Q.y << ")" << endl;
+
+    cout << "Private Key:" << endl;
+    cout << "d = " << k.pr_k.d << endl;
+
+
 
     ec_point message;
     message.x = 1;

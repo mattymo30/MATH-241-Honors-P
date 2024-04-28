@@ -3,6 +3,10 @@
 #include <iostream>
 #include <stdlib.h>
 #include <cmath>
+#include <stdbool.h>
+#include <ctime>
+
+using namespace std;
 
 struct ec_curve {
     int a;
@@ -82,9 +86,17 @@ int get_inverse(int a, int modular) {
 }
 
 
-
+/**
+ * Performs point addition on two different points P and Q in an elliptic curve
+ *
+ * @param P: An elliptic curve point represented as (x, y) coordinates.
+ * @param Q: Differnt elliptic curve point represented as (x, y) coordinates.
+ * @param curve: Parameters of the elliptic curve
+ * @return: The result of the point addition operation, which is a new elliptic curve point.
+ *          If the operation results in a point at infinity, (-1, -1) is returned.
+ */
 ec_point point_addition(ec_point P, ec_point Q, ec_curve curve) {
-
+    
     int x1 = P.x;
     int y1 = P.y;
     int x2 = Q.x;
@@ -92,11 +104,16 @@ ec_point point_addition(ec_point P, ec_point Q, ec_curve curve) {
 
     int den = x2 - x1;
 
+    // checking if point at infinity is reached
     if (den == 0) {
         ec_point new_p;
         new_p.x = -1;
         new_p.y = -1;
         return new_p;
+    }
+
+    if (den < 0) {
+        den += curve.p;
     }
 
 
@@ -109,6 +126,18 @@ ec_point point_addition(ec_point P, ec_point Q, ec_curve curve) {
     int x3 = (static_cast<int>(pow(s, 2)) - x1 - x2) % curve.p;
     int y3 = (s * (x1 - x3) - y1) % curve.p;
 
+    if (x3 < 0) {
+        while (x3 < 0) {
+            x3 += curve.p;
+        }
+    }
+
+    if (y3 < 0) {
+        while (y3 < 0) {
+            y3 += curve.p;
+        }
+    }
+
     new_p.x = x3;
     new_p.y = y3;
 
@@ -117,6 +146,14 @@ ec_point point_addition(ec_point P, ec_point Q, ec_curve curve) {
     return new_p;
 }
 
+/**
+ * Performs point doubling on a point P in an elliptic curve
+ *
+ * @param P: An elliptic curve point represented as (x, y) coordinates.
+ * @param curve: Parameters of the elliptic curve
+ * @return: The result of the point doubling operation, which is a new elliptic curve point.
+ *          If the operation results in a point at infinity, (-1, -1) is returned.
+ */
 ec_point point_doubling(ec_point P, ec_curve curve) {
     int s;
 
@@ -140,6 +177,18 @@ ec_point point_doubling(ec_point P, ec_curve curve) {
     int x3 = (static_cast<int>(pow(s, 2)) - P.x - P.x) % curve.p;
     int y3 = (s * (P.x - x3) - P.y) % curve.p;
 
+    if (x3 < 0) {
+        while (x3 < 0) {
+            x3 += curve.p;
+        }
+    }
+
+    if (y3 < 0) {
+        while (y3 < 0) {
+            y3 += curve.p;
+        }
+    }
+
     new_p.x = x3;
     new_p.y = y3;
 
@@ -149,15 +198,28 @@ ec_point point_doubling(ec_point P, ec_curve curve) {
 }
 
 
+/**
+ * Performs scalar multiplication of a point P on an elliptic curve by an integer multiplier.
+ *
+ * @param P: An elliptic curve point represented as (x, y) coordinates.
+ * @param mult: The integer multiplier for scalar multiplication.
+ * @param curve: Parameters of the elliptic curve
+ * @return: The result of scalar multiplication, which is a new elliptic curve point.
+ *          If the operation results in a point at infinity, (-1, -1) is returned.
+ */
 ec_point int_mult_point(ec_point P, int mult, ec_curve curve) {
     ec_point R;
 
 
     R = point_doubling(P, curve);
 
-    for (int i = 1; i < mult; i++) {
+    for (int i = 1; i < mult-1; i++) {
         if (P.x == R.x && P.y == R.y) {
             R = point_doubling(R, curve);
+        }
+        else if(R.x == -1 && R.y == -1) {
+            R.x = P.x;
+            R.y = P.y;
         }
         else {
             R = point_addition(R, P, curve);
@@ -168,6 +230,13 @@ ec_point int_mult_point(ec_point P, int mult, ec_curve curve) {
 
 }
 
+/**
+ * Computes the additive inverse of an elliptic curve point P.
+ *
+ * @param P: An elliptic curve point represented as (x, y) coordinates.
+ * @param curve: Parameters of the elliptic curve
+ * @return: The additive inverse of the input point P, where the y-coordinate is negated.
+ */
 ec_point point_inverse(ec_point P, ec_curve curve) {
     P.y = -P.y;
 
@@ -183,15 +252,23 @@ ec_point point_inverse(ec_point P, ec_curve curve) {
     return P;
 }
 
+
+/**
+ * Generates public and private keys for elliptic curve cryptography.
+ *
+ * @param curve: Parameters of the elliptic curve
+ * @param P: The base point on the elliptic curve.
+ * @return: A structure containing the generated public and private keys.
+ */
 keys generate_keys(ec_curve curve, ec_point P) {
-    srand(time(NULL));
+    srand(time(nullptr));
 
     ec_point Q;
-
     int d;
-    d = rand() % (curve.p - 1) + 2;
-
-    Q = int_mult_point(P, d, curve);
+    do {
+        d = (rand() % (curve.p - 1)) + 1;
+        Q = int_mult_point(P, d, curve);
+    } while (Q.x == -1 and Q.y == -1);
 
     public_key pub_k;
     pub_k.Q = Q;
@@ -206,7 +283,15 @@ keys generate_keys(ec_curve curve, ec_point P) {
     return keys;
 }
 
-
+/**
+ * Performs encryption of a message using elliptic curve cryptography.
+ *
+ * @param curve: Parameters of the elliptic curve including the prime modulus 'p'.
+ * @param P: The base point on the elliptic curve.
+ * @param Q: The public key point.
+ * @param M: The message point to be encrypted.
+ * @return: A structure containing the encrypted message.
+ */
 encrypted encryption(ec_curve curve, ec_point P, ec_point Q, ec_point M) {
     ec_point C1;
     ec_point C2;
@@ -214,10 +299,11 @@ encrypted encryption(ec_curve curve, ec_point P, ec_point Q, ec_point M) {
     int k;
     k = rand() % (curve.p - 1) + 2;
 
+    // first point of encrypted message
     C1 = int_mult_point(P, k, curve);
 
+    // second point of encrypted message
     C2 = int_mult_point(Q, k, curve);
-
     C2 = point_addition(C2, M, curve);
 
     encrypted points;
@@ -227,6 +313,15 @@ encrypted encryption(ec_curve curve, ec_point P, ec_point Q, ec_point M) {
     return points;
 }
 
+/**
+ * Performs decryption of an encrypted message using elliptic curve cryptography.
+ *
+ * @param curve: Parameters of the elliptic curve including the prime modulus 'p'.
+ * @param C1: The first part of the encrypted message.
+ * @param C2: The second part of the encrypted message.
+ * @param d: The private key used for decryption.
+ * @return: The decrypted message point.
+ */
 ec_point decryption(ec_curve curve, ec_point C1, ec_point C2, int d) {
     ec_point M;
 
@@ -235,6 +330,69 @@ ec_point decryption(ec_curve curve, ec_point C1, ec_point C2, int d) {
 
     M = point_addition(C2, mult_c1, curve);
     return M;
+}
+
+bool euler_criterion(int a, int p) {
+    int exp = (p - 1) / 2;
+
+    int check = static_cast<int>(pow(a, exp)) % p;
+
+    if (check == 1) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+int find_non_square(int n, int p) {
+    int a;
+    for (a = 2; a < p; a++) {
+        int b = (static_cast<int>(pow(a, 2)) - n) % p;
+        if (b < 0) {
+            while (b < 0) {
+                b += p;
+            }
+        }
+
+        bool has_res = euler_criterion(b, p);
+        if (!has_res) {
+            return a;
+        }
+    }
+
+    return -1;
+}
+
+
+ec_point rand_gen_point(ec_curve curve) {
+
+    ec_point point;
+
+    point.x = -1;
+    point.y = -1;
+
+    int x;
+    int right;
+    int a;
+
+    while (true) {
+        x = rand() % curve.p;
+        right = (static_cast<int>(pow(x, 3)) + (curve.a * x) + curve.b) % curve.p;
+        bool has_res = euler_criterion(right, curve.p);
+
+        if (!has_res) {
+            continue;
+        }
+
+        a = find_non_square(right, curve.p);
+        if (a != -1) {
+            break;
+        }
+    }
+
+    return point;
+
 }
 
 
@@ -246,7 +404,29 @@ int main()
     curve.b = 7;
     curve.p = 17;
 
-    std::cout << "Hello World!\n";
+    ec_point point;
+    point.x = 8;
+    point.y = 3;
+
+    keys k = generate_keys(curve, point);
+
+    ec_point message;
+    message.x = 1;
+    message.y = 12;
+
+    cout << "Message Point:" << endl;
+    cout << "(" << message.x << ", " << message.y << ")" << endl;
+
+    encrypted e_mes = encryption(curve, point, k.pub_k.Q, message);
+
+    cout << "Encrypted Points:" << endl;
+    cout << "C1: (" << e_mes.C1.x << ", " << e_mes.C1.y << ")" << endl;
+    cout << "C2: (" << e_mes.C2.x << ", " << e_mes.C2.y << ")" << endl;
+
+    ec_point decrypted = decryption(curve, e_mes.C1, e_mes.C2, k.pr_k.d);
+    cout << "Decrypted Point:" << endl;
+    cout << "(" << decrypted.x << ", " << decrypted.y << ")" << endl;
+
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

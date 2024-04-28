@@ -12,6 +12,14 @@ struct eea {
     int t;
 };
 
+/**
+ * @brief Computes the Extended Euclidean Algorithm (EEA) to find the greatest common divisor
+ *        and Bézout coefficients of two integers.
+ *
+ * @param r0 The first integer.
+ * @param r1 The second integer.
+ * @return A struct containing the results of the EEA: r (gcd), s, and t (Bézout coefficients).
+ */
 eea compute_eea(int r0, int r1) {
     int s0 = 1;
     int t0 = 0;
@@ -41,7 +49,15 @@ eea compute_eea(int r0, int r1) {
 
 }
 
-
+/**
+ * @brief Calculates the multiplicative inverse of a modulo another number using the
+ * Extended Euclidean Algorithm.
+ *
+ * @param a The number.
+ * @param modular The modulo value.
+ * @return The multiplicative inverse of a modulo modular.
+ * @throws std::runtime_error if no inverse exists.
+ */
 int get_inverse(int a, int modular) {
     eea a_eea = compute_eea(modular, a);
 
@@ -53,8 +69,13 @@ int get_inverse(int a, int modular) {
 
 }
 
-
-
+/**
+ * @brief Inverts the given key matrix for the Hill Cipher encryption.
+ *
+ * @param key_det The determinant of the key matrix.
+ * @param key The key matrix.
+ * @return The inverted key matrix.
+ */
 Mat<int> invert_ley_matrix(double key_det, mat key) {
     // first need to invert determinant of key matrix
     int int_det = int(key_det);
@@ -149,7 +170,12 @@ vector<Mat<int>> encrypt_hill_cipher(vector<Mat<int>> message, Mat<int> key) {
     return encrypted;
 }
 
-
+/**
+ * Print out encrypted message
+ *
+ * @param encrypted a vector of vectors representation of the
+ * encrypted messgae in groups of 3x1 matrices
+*/
 void print_encrypted(vector<Mat<int>> encrypted) {
 
     cout << "Encrypted Message: " << endl;
@@ -169,6 +195,12 @@ void print_encrypted(vector<Mat<int>> encrypted) {
     cout << endl;
 }
 
+/**
+ * Print out decrypted message
+ *
+ * @param encrypted a vector of vectors representation of the
+ * decrypted messgae in groups of 3x1 matrices
+*/
 void print_decrypted(vector<Mat<int>> decrypted) {
 
     cout << "Decrypted Message: " << endl;
@@ -219,12 +251,6 @@ vector<Mat<int>> decrypt_hill_cipher(vector<Mat<int>> encrypted, Mat<int> invers
 
     return decrypted;
 }
-
-
-
-
-
-
 
 
 int main() {
